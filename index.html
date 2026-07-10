@@ -434,7 +434,7 @@ function renderBottomNav() {
 function renderVisitModal(client) {
   const typeButtons = VISIT_TYPES.map(t => `<button class="type-btn ${state._visitType===t||(!state._visitType&&t==='Visita')?'active':''}" data-action="set-visit-type" data-value="${t}">${t}</button>`).join("");
   return `<div class="modal-overlay" data-action="close-visit-modal">
-    <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header"><span class="sheet-title">Registrar visita</span><button class="close-btn" data-action="close-visit-modal">${ICONS.x()}</button></div>
       <div class="sheet-client-name">${esc(client.name)}</div>
@@ -454,7 +454,7 @@ function renderClientForm(initial) {
   const catOptions = CATEGORIES.map(c => `<option value="${c}" ${f.category===c?"selected":""}>${c}</option>`).join("");
 
   return `<div class="modal-overlay" data-action="close-client-form">
-    <div class="sheet" style="max-height:88vh" onclick="event.stopPropagation()">
+    <div class="sheet" style="max-height:88vh">
       <div class="sheet-handle"></div>
       <div class="sheet-header"><span class="sheet-title">${initial?"Editar cliente":"Nuevo cliente"}</span><button class="close-btn" data-action="close-client-form">${ICONS.x()}</button></div>
       <div class="form-scroll">
@@ -483,7 +483,7 @@ function renderSyncModal() {
   const statusClass = state._syncStatus && state._syncStatus.type === "ok" ? "ok" : state._syncStatus && state._syncStatus.type === "err" ? "err" : "";
   const statusText = state._syncStatus ? state._syncStatus.text : "";
   return `<div class="modal-overlay" data-action="close-sync-modal">
-    <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header"><span class="sheet-title">Sincronizar con Sheets</span><button class="close-btn" data-action="close-sync-modal">${ICONS.x()}</button></div>
       <span class="form-label">URL de la Web App (Apps Script)</span>
@@ -513,11 +513,23 @@ function attachHandlers() {
     });
   }
 
-  app.addEventListener("click", onAppClick);
+  if (!app.dataset.listenerAttached) {
+    app.addEventListener("click", onAppClick);
+    app.dataset.listenerAttached = "1";
+  }
 }
 
+
 function onAppClick(e) {
-  const el = e.target.closest("[data-action]");
+  // Only close a modal when the dim background itself was tapped directly
+  if (e.target.classList && e.target.classList.contains("modal-overlay")) {
+    const overlayAction = e.target.dataset.action;
+    if (overlayAction === "close-visit-modal") { state.showVisitModal = false; render(); return; }
+    if (overlayAction === "close-client-form") { state.showClientForm = false; state.editingClient = null; render(); return; }
+    if (overlayAction === "close-sync-modal") { state.showSyncModal = false; render(); return; }
+  }
+
+  const el = e.target.closest("[data-action]:not(.modal-overlay)");
   if (!el) return;
   const action = el.dataset.action;
   const id = el.dataset.id;
