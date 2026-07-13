@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Control de Visitas</title>
+<meta name="theme-color" content="#12161C" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Visitas" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #12161C; }
+body { font-family: 'Inter', sans-serif; color: #EDEFF3; -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; outline: none; }
+input::placeholder, textarea::placeholder { color: #545C6B; }
+::-webkit-scrollbar { width: 0; height: 0; }
+svg { display: block; flex-shrink: 0; }
+
+#app {
+  max-width: 480px; margin: 0 auto; min-height: 100vh;
+  min-height: 100dvh; position: relative; display: flex; flex-direction: column;
+  background: #12161C; overflow: hidden;
+}
+.screen { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.header { display: flex; justify-content: space-between; align-items: flex-end; padding: 24px 20px 12px; }
+.eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #FFB020; font-weight: 600; margin-bottom: 2px; }
+.h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 800; margin: 0; text-transform: uppercase; line-height: 1; }
+.fab-small { width: 40px; height: 40px; border-radius: 12px; background: #FFB020; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.search-row { display: flex; gap: 8px; padding: 0 20px 12px; }
+.search-box { flex: 1; display: flex; align-items: center; gap: 8px; background: #1A2029; border: 1px solid #2A3140; border-radius: 12px; padding: 10px 12px; }
+.search-input { background: transparent; border: none; color: #EDEFF3; font-size: 14.5px; width: 100%; }
+.icon-btn { width: 42px; height: 42px; border-radius: 12px; background: #1A2029; border: 1px solid #2A3140; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.filter-panel { padding: 0 20px 12px; display: flex; flex-direction: column; gap: 10px; }
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-label { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 1px; color: #8A93A3; }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 12.5px; padding: 6px 11px; border-radius: 999px; background: #1A2029; border: 1px solid #2A3140; color: #B4BAC6; }
+.chip.active { background: #FFB020; color: #12161C; border: 1px solid #FFB020; font-weight: 600; }
+.list { flex: 1; overflow-y: auto; padding: 4px 20px 100px; display: flex; flex-direction: column; gap: 8px; -webkit-overflow-scrolling: touch; }
+.card { display: flex; align-items: stretch; background: #1A2029; border-radius: 14px; overflow: hidden; border: 1px solid #232B38; text-align: left; width: 100%; flex-shrink: 0; }
+.card-bar { width: 5px; flex-shrink: 0; }
+.card-body { flex: 1; padding: 13px 12px; min-width: 0; }
+.card-top-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.card-name { font-size: 15.5px; font-weight: 600; color: #EDEFF3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A93A3; border: 1px solid #2A3140; border-radius: 6px; padding: 1px 6px; flex-shrink: 0; }
+.card-sub-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.card-sub { font-size: 12.5px; color: #8A93A3; }
+.card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 14px; flex-shrink: 0; }
+.days-num { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 600; line-height: 1; }
+.days-label { font-size: 10px; color: #8A93A3; margin-top: 2px; white-space: nowrap; }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 20px; }
+.empty-text { font-size: 13px; color: #8A93A3; text-align: center; line-height: 1.5; }
+
+.detail-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 12px; border-bottom: 1px solid #1F2530; }
+.back-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+.detail-header-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1.5px; color: #8A93A3; }
+.edit-link { font-size: 13px; color: #FFB020; font-weight: 600; padding: 6px 10px; }
+.detail-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 100px; -webkit-overflow-scrolling: touch; }
+
+.status-stripe { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid; margin-bottom: 16px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.status-label { font-size: 14px; font-weight: 700; }
+.status-sub { font-size: 12px; color: #B4BAC6; margin-top: 1px; }
+
+.client-title { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; margin: 0 0 8px; text-transform: uppercase; }
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tag { font-size: 11.5px; color: #B4BAC6; border: 1px solid #2A3140; border-radius: 999px; padding: 3px 10px; }
+
+.info-card { background: #1A2029; border: 1px solid #232B38; border-radius: 14px; padding: 6px 14px; margin-bottom: 18px; }
+.info-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #212836; }
+.info-row:last-child { border-bottom: none; }
+.info-text { font-size: 13.5px; color: #D8DCE3; }
+
+.register-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #FFB020; color: #12161C; font-weight: 700; font-size: 15px; padding: 15px; border-radius: 14px; width: 100%; margin-bottom: 22px; }
+.register-btn:disabled { opacity: 0.5; }
+
+.history-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.history-title { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; text-transform: uppercase; }
+.history-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8A93A3; }
+.history-list { display: flex; flex-direction: column; gap: 2px; }
+.history-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1F2530; }
+.history-date-col { display: flex; flex-direction: column; width: 52px; flex-shrink: 0; }
+.history-date { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #D8DCE3; }
+.history-time { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #8A93A3; }
+.history-divider { width: 1px; background: #232B38; }
+.history-main { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.history-type { font-size: 13.5px; font-weight: 600; color: #EDEFF3; }
+.history-notes { font-size: 12.5px; color: #8A93A3; line-height: 1.4; }
+.history-item-alert { background: rgba(229,72,77,0.08); margin: 0 -20px; padding: 10px 20px; }
+.history-alert-text { color: #E5484D !important; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-tile { background: #1A2029; border: 1px solid #232B38; border-radius: 14px; padding: 16px 14px; display: flex; flex-direction: column; }
+.stat-value { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; line-height: 1; }
+.stat-label { font-size: 12px; color: #8A93A3; margin-top: 4px; }
+
+.alert-row { display: flex; gap: 10px; margin-bottom: 22px; }
+.alert-card { flex: 1; display: flex; align-items: center; gap: 8px; background: #1A2029; border: 1px solid; border-radius: 12px; padding: 10px 12px; }
+.alert-num { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; }
+.alert-label { font-size: 12px; color: #8A93A3; }
+
+.section-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8A93A3; margin-bottom: 8px; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.rank-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.rank-item { display: flex; align-items: center; gap: 10px; background: #1A2029; border: 1px solid #232B38; border-radius: 12px; padding: 10px 12px; width: 100%; text-align: left; flex-shrink: 0; }
+.rank-index { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8A93A3; width: 14px; }
+.rank-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rank-name { font-size: 13.5px; color: #EDEFF3; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8A93A3; flex-shrink: 0; }
+
+.bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; background: #161B22; border-top: 1px solid #232B38; padding: 10px 0 calc(18px + env(safe-area-inset-bottom)); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.nav-label { font-size: 11px; font-weight: 600; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; z-index: 50; }
+.sheet { background: #171C24; width: 100%; max-width: 480px; margin: 0 auto; border-radius: 20px 20px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom)); max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+.sheet-handle { width: 36px; height: 4px; background: #2A3140; border-radius: 4px; margin: 4px auto 12px; }
+.sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 700; text-transform: uppercase; }
+.close-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+.sheet-client-name { font-size: 13.5px; color: #8A93A3; margin-bottom: 16px; }
+
+.form-label { font-size: 11.5px; color: #8A93A3; display: block; margin-bottom: 6px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.type-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+.type-btn { font-size: 13px; padding: 9px 13px; border-radius: 10px; background: #1F2530; border: 1px solid #2A3140; color: #D8DCE3; }
+.type-btn.active { background: #FFB020; color: #12161C; border: 1px solid #FFB020; font-weight: 700; }
+.textarea { width: 100%; background: #1F2530; border: 1px solid #2A3140; border-radius: 10px; color: #EDEFF3; padding: 10px 12px; font-size: 13.5px; margin-top: 2px; resize: none; }
+.form-scroll { overflow-y: auto; }
+.row2 { display: flex; gap: 10px; }
+.input, select.select { width: 100%; background: #1F2530; border: 1px solid #2A3140; border-radius: 10px; color: #EDEFF3; padding: 10px 12px; font-size: 13.5px; }
+
+.filter-select-wrap { position: relative; }
+.filter-select { width: 100%; background: #1A2029; border: 1px solid #2A3140; border-radius: 12px; color: #EDEFF3; padding: 10px 34px 10px 12px; font-size: 13px; appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+.filter-select-wrap::after { content: ""; position: absolute; right: 12px; top: 50%; width: 8px; height: 8px; border-right: 2px solid #8A93A3; border-bottom: 2px solid #8A93A3; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+
+.install-banner { position: absolute; top: 10px; left: 10px; right: 10px; background: #FFB020; color: #12161C; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 600; z-index: 60; }
+.install-banner button.install-btn { background: #12161C; color: #FFB020; padding: 7px 12px; border-radius: 8px; font-size: 12.5px; }
+.install-banner button.dismiss-btn { color: #12161C; opacity: 0.6; font-size: 18px; line-height: 1; padding: 0 4px; }
+.sync-status { font-size: 12.5px; color: #8A93A3; margin-top: 10px; min-height: 18px; }
+.sync-status.ok { color: #34C77B; }
+.sync-status.err { color: #E5484D; }
+.sync-btn-row { display: flex; gap: 10px; margin-top: 8px; }
+.sync-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-radius: 12px; font-size: 13.5px; font-weight: 600; }
+.sync-btn.push { background: #FFB020; color: #12161C; }
+.sync-btn.pull { background: #1F2530; color: #EDEFF3; border: 1px solid #2A3140; }
+.sync-hint { font-size: 12px; color: #8A93A3; line-height: 1.5; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------- Icons (inline SVG) ---------------- */
+const ICONS = {
+  search: (c='#8A93A3',s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  plus: (c='#12161C',s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  filter: (c='#8A93A3',s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`,
+  building: (c='#3A4252',s=28)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="6" x2="9" y2="6"/><line x1="15" y1="6" x2="15" y2="6"/><line x1="9" y1="10" x2="9" y2="10"/><line x1="15" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="9" y2="14"/><line x1="15" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="15" y2="18"/></svg>`,
+  chevronLeft: (c='#EDEFF3',s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+  mapPin: (c='#8A93A3',s=12)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  user: (c='#8A93A3',s=15)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  phone: (c='#8A93A3',s=15)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  mail: (c='#8A93A3',s=15)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  clock: (c='#12161C',s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  check: (c='#12161C',s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  x: (c='#8A93A3',s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  trending: (c='#8A93A3',s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  alert: (c='#F2A93B',s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  sync: (c='#8A93A3',s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+};
+
+/* ---------------- Data / constants ---------------- */
+const PROVINCES = ["Valencia", "Castellón", "Alicante", "Albacete", "Murcia", "Cuenca"];
+const CATEGORIES = ["A", "B", "C"];
+const CLIENT_TYPES = ["Ingeniería", "Arquitectura", "Instaladora", "Constructora", "Ayuntamiento"];
+const FREQ_OPTIONS = [15, 30, 45, 60, 90];
+const VISIT_TYPES = ["Visita", "Llamada", "Reunión", "Seguimiento", "Oferta"];
+const STORAGE_KEY = "clientes-visitas-v1";
+
+const STATUS_META = {
+  green: { color: "#34C77B", glow: "rgba(52,199,123,0.12)", label: "Al día" },
+  amber: { color: "#F2A93B", glow: "rgba(242,169,59,0.12)", label: "Revisar" },
+  red: { color: "#E5484D", glow: "rgba(229,72,77,0.12)", label: "Urgente" },
+};
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+function daysAgoISO(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); }
+function daysSince(iso) { return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); }
+function lastVisitOf(c) { if (!c.visits || !c.visits.length) return null; return [...c.visits].sort((a,b)=>new Date(b.date)-new Date(a.date))[0]; }
+function statusOf(c) { const last = lastVisitOf(c); if (!last) return "red"; const d = daysSince(last.date); if (d <= c.frequency) return "green"; if (d <= c.frequency*1.5) return "amber"; return "red"; }
+function fmtDate(iso) { return new Date(iso).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit"}); }
+function fmtTime(iso) { return new Date(iso).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}); }
+function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function seedClients() {
+  return [
+    { id: uid(), name: "IDOM", city: "Castellón", province: "Castellón", address: "Av. del Mar 12", contact: "Marta Ferrer", phone: "964 000 111", email: "marta.ferrer@idom.com", frequency: 30, category: "A", clientType: "Ingeniería", status: "Activo",
+      visits: [{ id: uid(), date: daysAgoISO(38), type: "Visita", notes: "Presentación Granada 1 LED" }, { id: uid(), date: daysAgoISO(70), type: "Llamada", notes: "" }] },
+    { id: uid(), name: "Vielca Ingenieros", city: "Valencia", province: "Valencia", address: "Calle Colón 45", contact: "Javier Soto", phone: "963 111 222", email: "jsoto@vielca.com", frequency: 30, category: "A", clientType: "Ingeniería", status: "Activo",
+      visits: [{ id: uid(), date: daysAgoISO(12), type: "Oferta", notes: "Oferta Forum 2.0" }] },
+    { id: uid(), name: "Inesco", city: "Murcia", province: "Murcia", address: "Gran Vía 8", contact: "Laura Gómez", phone: "968 222 333", email: "laura@inesco.es", frequency: 45, category: "B", clientType: "Ingeniería", status: "Activo",
+      visits: [{ id: uid(), date: daysAgoISO(76), type: "Visita", notes: "" }] },
+    { id: uid(), name: "CPS Ingeniería", city: "Alicante", province: "Alicante", address: "Paseo Explanada 3", contact: "Rubén Martí", phone: "965 333 444", email: "ruben@cps.es", frequency: 60, category: "C", clientType: "Instaladora", status: "Activo",
+      visits: [] },
+  ];
+}
+
+/* ---------------- State ---------------- */
+let state = {
+  clients: [],
+  tab: "clientes",
+  search: "",
+  provinceFilter: "Todas",
+  cityFilter: "Todas",
+  typeFilter: "Todos",
+  sortBy: "dias",
+  selectedId: null,
+  showFilters: false,
+  showVisitModal: false,
+  showClientForm: false,
+  editingClient: null,
+  showSyncModal: false,
+  syncUrl: "",
+  _syncStatus: null,
+  _syncSyncing: false,
+};
+
+const SYNC_URL_KEY = "sync-url";
+function loadSyncUrl() { try { state.syncUrl = localStorage.getItem(SYNC_URL_KEY) || ""; } catch (e) {} }
+function saveSyncUrl(url) { state.syncUrl = url; try { localStorage.setItem(SYNC_URL_KEY, url); } catch (e) {} }
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state.clients = raw ? JSON.parse(raw) : seedClients();
+  } catch (e) { state.clients = seedClients(); }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.clients)); } catch (e) {}
+}
+
+/* ---------------- Derived data ---------------- */
+function getFiltered() {
+  let list = state.clients.filter(c =>
+    c.name.toLowerCase().includes(state.search.toLowerCase()) ||
+    c.city.toLowerCase().includes(state.search.toLowerCase())
+  );
+  if (state.provinceFilter !== "Todas") list = list.filter(c => c.province === state.provinceFilter);
+  if (state.cityFilter !== "Todas") list = list.filter(c => c.city === state.cityFilter);
+  if (state.typeFilter !== "Todos") list = list.filter(c => c.clientType === state.typeFilter);
+  list = list.map(c => { const last = lastVisitOf(c); return { ...c, _days: last ? daysSince(last.date) : Infinity, _status: statusOf(c) }; });
+  if (state.sortBy === "dias") list.sort((a,b) => b._days - a._days);
+  else if (state.sortBy === "nombre") list.sort((a,b) => a.name.localeCompare(b.name));
+  else if (state.sortBy === "categoria") list.sort((a,b) => a.category.localeCompare(b.category));
+  else if (state.sortBy === "visitas") list.sort((a,b) => (b.visits?.length||0) - (a.visits?.length||0));
+  return list;
+}
+function getStats() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  let t=0, w=0, m=0;
+  state.clients.forEach(c => (c.visits||[]).forEach(v => {
+    const vd = new Date(v.date);
+    if (vd >= today) t++;
+    if (vd >= weekStart) w++;
+    if (vd >= monthStart) m++;
+  }));
+  const withStatus = state.clients.map(c => ({ ...c, _status: statusOf(c), _last: lastVisitOf(c) }));
+  const pending = withStatus.filter(c => c._status === "amber").length;
+  const overdue = withStatus.filter(c => c._status === "red").length;
+  const mostVisited = [...state.clients].sort((a,b) => (b.visits?.length||0)-(a.visits?.length||0)).slice(0,10);
+  const forgotten = [...withStatus].sort((a,b) => {
+    const da = a._last ? daysSince(a._last.date) : 99999;
+    const db = b._last ? daysSince(b._last.date) : 99999;
+    return db - da;
+  }).slice(0,10);
+  return { today:t, week:w, month:m, pending, overdue, mostVisited, forgotten };
+}
+
+/* ---------------- Rendering ---------------- */
+function render() {
+  const app = document.getElementById("app");
+  const selected = state.clients.find(c => c.id === state.selectedId) || null;
+  let html = "";
+
+  if (selected) {
+    html += renderDetail(selected);
+  } else if (state.tab === "clientes") {
+    html += renderList();
+    html += renderBottomNav();
+  } else {
+    html += renderDashboard();
+    html += renderBottomNav();
+  }
+
+  if (state.showVisitModal && selected) html += renderVisitModal(selected);
+  if (state.showClientForm) html += renderClientForm(state.editingClient);
+  if (state.showSyncModal) html += renderSyncModal();
+
+  app.innerHTML = html;
+  attachHandlers();
+}
+
+function renderList() {
+  const clients = getFiltered();
+  const provinceOptionsFilter = ["Todas", ...PROVINCES].map(p =>
+    `<option value="${esc(p)}" ${state.provinceFilter===p?"selected":""}>${esc(p)}</option>`
+  ).join("");
+  const distinctCities = [...new Set(state.clients.map(c => c.city).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const cityOptionsFilter = ["Todas", ...distinctCities].map(ct =>
+    `<option value="${esc(ct)}" ${state.cityFilter===ct?"selected":""}>${esc(ct)}</option>`
+  ).join("");
+  const typeChips = ["Todos", ...CLIENT_TYPES].map(t =>
+    `<button class="chip ${state.typeFilter===t?'active':''}" data-action="set-type-filter" data-value="${esc(t)}">${esc(t)}</button>`
+  ).join("");
+  const sortChips = [["dias","Días sin visitar"],["nombre","Nombre"],["categoria","Categoría"],["visitas","Más visitados"]].map(([v,l]) =>
+    `<button class="chip ${state.sortBy===v?'active':''}" data-action="set-sort" data-value="${v}">${l}</button>`
+  ).join("");
+
+  const cards = clients.length === 0
+    ? `<div class="empty-state">${ICONS.building()}<p class="empty-text">Sin clientes para este filtro.<br/>Prueba a cambiar la búsqueda o añade uno nuevo.</p></div>`
+    : clients.map(c => {
+        const meta = STATUS_META[c._status];
+        return `<button class="card" data-action="open-client" data-id="${c.id}">
+          <div class="card-bar" style="background:${meta.color}"></div>
+          <div class="card-body">
+            <div class="card-top-row">
+              <span class="card-name">${esc(c.name)}</span>
+              <span class="cat-badge">${esc(c.category)}</span>
+            </div>
+            <div class="card-sub-row">${ICONS.mapPin()}<span class="card-sub">${esc(c.city)}${c.clientType?` · ${esc(c.clientType)}`:""}</span></div>
+          </div>
+          <div class="card-right">
+            <span class="days-num" style="color:${meta.color}">${c._days===Infinity?"—":c._days}</span>
+            <span class="days-label">${c._days===Infinity?"sin visitas":"días"}</span>
+          </div>
+        </button>`;
+      }).join("");
+
+  return `<div class="screen">
+    <div class="header">
+      <div><div class="eyebrow">RUTA COMERCIAL</div><h1 class="h1">Clientes</h1></div>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" data-action="open-sync-modal">${ICONS.sync()}</button>
+        <button class="fab-small" data-action="new-client">${ICONS.plus()}</button>
+      </div>
+    </div>
+    <div class="search-row">
+      <div class="search-box">${ICONS.search()}<input class="search-input" id="search-input" placeholder="Buscar cliente o ciudad..." value="${esc(state.search)}" /></div>
+      <button class="icon-btn" data-action="toggle-filters">${ICONS.filter(state.showFilters?'#FFB020':'#8A93A3')}</button>
+    </div>
+    ${state.showFilters ? `<div class="filter-panel">
+      <div class="filter-group"><span class="filter-label">POBLACIÓN</span><div class="filter-select-wrap"><select class="filter-select" id="city-filter-select">${cityOptionsFilter}</select></div></div>
+      <div class="filter-group"><span class="filter-label">PROVINCIA</span><div class="filter-select-wrap"><select class="filter-select" id="province-filter-select">${provinceOptionsFilter}</select></div></div>
+      <div class="filter-group"><span class="filter-label">TIPO</span><div class="chip-row">${typeChips}</div></div>
+      <div class="filter-group"><span class="filter-label">ORDENAR</span><div class="chip-row">${sortChips}</div></div>
+    </div>` : ""}
+    <div class="list">${cards}</div>
+  </div>`;
+}
+
+function renderDetail(client) {
+  const status = statusOf(client);
+  const meta = STATUS_META[status];
+  const last = lastVisitOf(client);
+  const sortedVisits = [...(client.visits||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const historyHtml = sortedVisits.length === 0
+    ? `<p class="empty-text">Todavía no hay visitas registradas.</p>`
+    : sortedVisits.map(v => {
+        const isStaleOffer = v.type === "Oferta" && daysSince(v.date) > 60;
+        return `<div class="history-item${isStaleOffer ? " history-item-alert" : ""}">
+        <div class="history-date-col"><span class="history-date${isStaleOffer ? " history-alert-text" : ""}">${fmtDate(v.date)}</span><span class="history-time">${fmtTime(v.date)}</span></div>
+        <div class="history-divider"></div>
+        <div class="history-main"><span class="history-type${isStaleOffer ? " history-alert-text" : ""}">${esc(v.type)}${isStaleOffer ? ` · sin cerrar (${daysSince(v.date)} días)` : ""}</span>${v.notes?`<span class="history-notes">${esc(v.notes)}</span>`:""}</div>
+      </div>`;
+      }).join("");
+
+  return `<div class="screen">
+    <div class="detail-header">
+      <button class="back-btn" data-action="back">${ICONS.chevronLeft()}</button>
+      <span class="detail-header-title">FICHA DE CLIENTE</span>
+      <button class="edit-link" data-action="edit-client" data-id="${client.id}">Editar</button>
+    </div>
+    <div class="detail-scroll">
+      <div class="status-stripe" style="background:${meta.glow};border-color:${meta.color}">
+        <div class="status-dot" style="background:${meta.color}"></div>
+        <div>
+          <div class="status-label" style="color:${meta.color}">${meta.label}</div>
+          <div class="status-sub">${last ? `Última visita hace ${daysSince(last.date)} días · frecuencia ${client.frequency} días` : `Sin visitas registradas · frecuencia ${client.frequency} días`}</div>
+        </div>
+      </div>
+      <h1 class="client-title">${esc(client.name)}</h1>
+      <div class="tag-row"><span class="tag">${esc(client.province)}</span><span class="tag">Categoría ${esc(client.category)}</span>${client.clientType?`<span class="tag">${esc(client.clientType)}</span>`:""}<span class="tag">${esc(client.status)}</span></div>
+      <div class="info-card">
+        <div class="info-row">${ICONS.mapPin('#8A93A3',15)}<span class="info-text">${esc(client.address)}, ${esc(client.city)}</span></div>
+        ${client.contact?`<div class="info-row">${ICONS.user()}<span class="info-text">${esc(client.contact)}</span></div>`:""}
+        ${client.phone?`<div class="info-row">${ICONS.phone()}<span class="info-text">${esc(client.phone)}</span></div>`:""}
+        ${client.email?`<div class="info-row">${ICONS.mail()}<span class="info-text">${esc(client.email)}</span></div>`:""}
+      </div>
+      <button class="register-btn" data-action="open-visit-modal">${ICONS.clock()} Registrar visita</button>
+      <div class="history-header"><span class="history-title">Historial</span><span class="history-count">${sortedVisits.length}</span></div>
+      <div class="history-list">${historyHtml}</div>
+    </div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const s = getStats();
+  const mostVisitedHtml = s.mostVisited.map((c,i) => `<button class="rank-item" data-action="open-client" data-id="${c.id}">
+    <span class="rank-index">${i+1}</span><span class="rank-name">${esc(c.name)}</span><span class="rank-value">${c.visits?.length||0} visitas</span>
+  </button>`).join("");
+  const forgottenHtml = s.forgotten.map(c => {
+    const d = c._last ? daysSince(c._last.date) : null;
+    const meta = STATUS_META[statusOf(c)];
+    return `<button class="rank-item" data-action="open-client" data-id="${c.id}">
+      <span class="rank-dot" style="background:${meta.color}"></span><span class="rank-name">${esc(c.name)}</span>
+      <span class="rank-value" style="color:${meta.color}">${d===null?"sin visitas":`${d} días`}</span>
+    </button>`;
+  }).join("");
+
+  return `<div class="screen">
+    <div class="header"><div><div class="eyebrow">PANEL DE CONTROL</div><h1 class="h1">Dashboard</h1></div></div>
+    <div class="detail-scroll">
+      <div class="stat-grid">
+        <div class="stat-tile"><span class="stat-value" style="color:#FFB020">${s.today}</span><span class="stat-label">Hoy</span></div>
+        <div class="stat-tile"><span class="stat-value" style="color:#FFB020">${s.week}</span><span class="stat-label">Esta semana</span></div>
+        <div class="stat-tile"><span class="stat-value" style="color:#FFB020">${s.month}</span><span class="stat-label">Este mes</span></div>
+        <div class="stat-tile"><span class="stat-value" style="color:#8A93A3">${state.clients.length}</span><span class="stat-label">Clientes</span></div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-card" style="border-color:#F2A93B33">${ICONS.alert()}<span class="alert-num">${s.pending}</span><span class="alert-label">por revisar</span></div>
+        <div class="alert-card" style="border-color:#E5484D33">${ICONS.alert('#E5484D')}<span class="alert-num">${s.overdue}</span><span class="alert-label">urgentes</span></div>
+      </div>
+      <div class="section-label">${ICONS.trending('#8A93A3',14)}<span>Clientes más visitados</span></div>
+      <div class="rank-list">${mostVisitedHtml}</div>
+      <div class="section-label">${ICONS.alert('#8A93A3',14)}<span>Clientes olvidados</span></div>
+      <div class="rank-list">${forgottenHtml}</div>
+    </div>
+  </div>`;
+}
+
+function renderBottomNav() {
+  const activeColor = "#FFB020", inactiveColor = "#8A93A3";
+  const cColor = state.tab === "clientes" ? activeColor : inactiveColor;
+  const dColor = state.tab === "dashboard" ? activeColor : inactiveColor;
+  return `<div class="bottom-nav">
+    <button class="nav-btn" data-action="set-tab" data-value="clientes">${ICONS.building(cColor,20)}<span class="nav-label" style="color:${cColor}">Clientes</span></button>
+    <button class="nav-btn" data-action="set-tab" data-value="dashboard">${ICONS.trending(dColor,20)}<span class="nav-label" style="color:${dColor}">Panel</span></button>
+  </div>`;
+}
+
+function renderVisitModal(client) {
+  const typeButtons = VISIT_TYPES.map(t => `<button class="type-btn ${state._visitType===t||(!state._visitType&&t==='Visita')?'active':''}" data-action="set-visit-type" data-value="${t}">${t}</button>`).join("");
+  return `<div class="modal-overlay" data-action="close-visit-modal">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header"><span class="sheet-title">Registrar visita</span><button class="close-btn" data-action="close-visit-modal">${ICONS.x()}</button></div>
+      <div class="sheet-client-name">${esc(client.name)}</div>
+      <span class="form-label">Tipo</span>
+      <div class="type-grid">${typeButtons}</div>
+      <span class="form-label">Observaciones (opcional)</span>
+      <textarea class="textarea" id="visit-notes" rows="3" placeholder="Ej. presentación Granada 1 LED, pendiente de oferta...">${esc(state._visitNotes||"")}</textarea>
+      <button class="register-btn" style="margin-top:16px" data-action="save-visit" data-id="${client.id}">${ICONS.check()} Guardar visita</button>
+    </div>
+  </div>`;
+}
+
+function renderClientForm(initial) {
+  const f = initial || { name:"", city:"", province:PROVINCES[0], address:"", contact:"", phone:"", email:"", frequency:30, category:"B", clientType: CLIENT_TYPES[0], status:"Activo" };
+  const provinceOptions = PROVINCES.map(p => `<option value="${esc(p)}" ${f.province===p?"selected":""}>${esc(p)}</option>`).join("");
+  const freqOptions = FREQ_OPTIONS.map(n => `<option value="${n}" ${f.frequency===n?"selected":""}>${n} días</option>`).join("");
+  const catOptions = CATEGORIES.map(c => `<option value="${c}" ${f.category===c?"selected":""}>${c}</option>`).join("");
+  const typeOptions = CLIENT_TYPES.map(t => `<option value="${esc(t)}" ${f.clientType===t?"selected":""}>${esc(t)}</option>`).join("");
+
+  return `<div class="modal-overlay" data-action="close-client-form">
+    <div class="sheet" style="max-height:88vh">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header"><span class="sheet-title">${initial?"Editar cliente":"Nuevo cliente"}</span><button class="close-btn" data-action="close-client-form">${ICONS.x()}</button></div>
+      <div class="form-scroll">
+        <span class="form-label">Nombre</span><input class="input" id="f-name" value="${esc(f.name)}" placeholder="Nombre del cliente" />
+        <div class="row2">
+          <div style="flex:1"><span class="form-label">Ciudad</span><input class="input" id="f-city" value="${esc(f.city)}" placeholder="Ciudad" /></div>
+          <div style="flex:1"><span class="form-label">Provincia</span><select class="select" id="f-province">${provinceOptions}</select></div>
+        </div>
+        <span class="form-label">Dirección</span><input class="input" id="f-address" value="${esc(f.address)}" placeholder="Calle, número" />
+        <span class="form-label">Persona de contacto</span><input class="input" id="f-contact" value="${esc(f.contact)}" placeholder="Nombre y apellidos" />
+        <div class="row2">
+          <div style="flex:1"><span class="form-label">Teléfono</span><input class="input" id="f-phone" value="${esc(f.phone)}" placeholder="600 000 000" /></div>
+          <div style="flex:1"><span class="form-label">Email</span><input class="input" id="f-email" value="${esc(f.email)}" placeholder="correo@empresa.com" /></div>
+        </div>
+        <div class="row2">
+          <div style="flex:1"><span class="form-label">Frecuencia objetivo</span><select class="select" id="f-frequency">${freqOptions}</select></div>
+          <div style="flex:1"><span class="form-label">Categoría</span><select class="select" id="f-category">${catOptions}</select></div>
+        </div>
+        <span class="form-label">Tipo de cliente</span>
+        <select class="select" id="f-clienttype">${typeOptions}</select>
+        <button class="register-btn" style="margin-top:18px" data-action="save-client" data-id="${initial?initial.id:''}">${ICONS.check()} ${initial?"Guardar cambios":"Añadir cliente"}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSyncModal() {
+  const statusClass = state._syncStatus && state._syncStatus.type === "ok" ? "ok" : state._syncStatus && state._syncStatus.type === "err" ? "err" : "";
+  const statusText = state._syncStatus ? state._syncStatus.text : "";
+  return `<div class="modal-overlay" data-action="close-sync-modal">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header"><span class="sheet-title">Sincronizar con Sheets</span><button class="close-btn" data-action="close-sync-modal">${ICONS.x()}</button></div>
+      <span class="form-label">URL de la Web App (Apps Script)</span>
+      <input class="input" id="sync-url-input" value="${esc(state.syncUrl)}" placeholder="https://script.google.com/macros/s/AKfycb.../exec" />
+      <p class="sync-hint">Pega aquí la URL que te da Google al implementar el script como aplicación web (termina en /exec).</p>
+      <div class="sync-btn-row">
+        <button class="sync-btn push" data-action="sync-push">${ICONS.sync('#12161C',15)} Subir a Sheets</button>
+        <button class="sync-btn pull" data-action="sync-pull">${ICONS.sync('#EDEFF3',15)} Descargar de Sheets</button>
+      </div>
+      <div class="sync-status ${statusClass}">${esc(statusText)}</div>
+    </div>
+  </div>`;
+}
+
+
+function attachHandlers() {
+  const app = document.getElementById("app");
+
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      state.search = e.target.value;
+      const cursor = e.target.selectionStart;
+      render();
+      const again = document.getElementById("search-input");
+      if (again) { again.focus(); again.setSelectionRange(cursor, cursor); }
+    });
+  }
+
+  const cityFilterSelect = document.getElementById("city-filter-select");
+  if (cityFilterSelect) {
+    cityFilterSelect.addEventListener("change", (e) => {
+      state.cityFilter = e.target.value;
+      render();
+    });
+  }
+
+  const provinceFilterSelect = document.getElementById("province-filter-select");
+  if (provinceFilterSelect) {
+    provinceFilterSelect.addEventListener("change", (e) => {
+      state.provinceFilter = e.target.value;
+      render();
+    });
+  }
+
+  if (!app.dataset.listenerAttached) {
+    app.addEventListener("click", onAppClick);
+    app.dataset.listenerAttached = "1";
+  }
+}
+
+
+function onAppClick(e) {
+  // Only close a modal when the dim background itself was tapped directly
+  if (e.target.classList && e.target.classList.contains("modal-overlay")) {
+    const overlayAction = e.target.dataset.action;
+    if (overlayAction === "close-visit-modal") { state.showVisitModal = false; render(); return; }
+    if (overlayAction === "close-client-form") { state.showClientForm = false; state.editingClient = null; render(); return; }
+    if (overlayAction === "close-sync-modal") { state.showSyncModal = false; render(); return; }
+  }
+
+  const el = e.target.closest("[data-action]:not(.modal-overlay)");
+  if (!el) return;
+  const action = el.dataset.action;
+  const id = el.dataset.id;
+  const value = el.dataset.value;
+
+  switch (action) {
+    case "open-client": state.selectedId = id; render(); break;
+    case "back": state.selectedId = null; render(); break;
+    case "set-tab": state.tab = value; state.selectedId = null; render(); break;
+    case "toggle-filters": state.showFilters = !state.showFilters; render(); break;
+    case "set-province": state.provinceFilter = value; render(); break;
+    case "set-city-filter": state.cityFilter = value; render(); break;
+    case "set-type-filter": state.typeFilter = value; render(); break;
+    case "set-sort": state.sortBy = value; render(); break;
+    case "new-client": state.editingClient = null; state.showClientForm = true; render(); break;
+    case "edit-client": {
+      const c = state.clients.find(x => x.id === id);
+      state.editingClient = c; state.showClientForm = true; render(); break;
+    }
+    case "close-client-form": state.showClientForm = false; state.editingClient = null; render(); break;
+    case "open-sync-modal": state.showSyncModal = true; state._syncStatus = null; render(); focusSyncInput(); break;
+    case "close-sync-modal": state.showSyncModal = false; render(); break;
+    case "sync-push": doPush(); break;
+    case "sync-pull": doPull(); break;
+    case "open-visit-modal": state.showVisitModal = true; state._visitType = "Visita"; state._visitNotes = ""; render(); break;
+    case "close-visit-modal": state.showVisitModal = false; render(); break;
+    case "set-visit-type": state._visitType = value; render(); break;
+    case "save-visit": {
+      const notesEl = document.getElementById("visit-notes");
+      const notes = notesEl ? notesEl.value : "";
+      const c = state.clients.find(x => x.id === id);
+      if (c) {
+        c.visits = c.visits || [];
+        c.visits.push({ id: uid(), date: new Date().toISOString(), type: state._visitType || "Visita", notes });
+        save();
+      }
+      state.showVisitModal = false;
+      render();
+      break;
+    }
+    case "save-client": {
+      const data = {
+        name: document.getElementById("f-name").value.trim(),
+        city: document.getElementById("f-city").value.trim(),
+        province: document.getElementById("f-province").value,
+        address: document.getElementById("f-address").value.trim(),
+        contact: document.getElementById("f-contact").value.trim(),
+        phone: document.getElementById("f-phone").value.trim(),
+        email: document.getElementById("f-email").value.trim(),
+        frequency: Number(document.getElementById("f-frequency").value),
+        category: document.getElementById("f-category").value,
+        clientType: document.getElementById("f-clienttype").value,
+        status: "Activo",
+      };
+      if (!data.name) break;
+      if (id) {
+        const c = state.clients.find(x => x.id === id);
+        Object.assign(c, data);
+      } else {
+        state.clients.push({ ...data, id: uid(), visits: [] });
+      }
+      save();
+      state.showClientForm = false; state.editingClient = null;
+      render();
+      break;
+    }
+  }
+
+  if (action === "close-visit-modal" || action === "close-client-form") {
+    // already handled above
+  }
+}
+
+// close modals when tapping the dark overlay itself
+document.addEventListener("click", (e) => {
+  if (e.target.classList && e.target.classList.contains("modal-overlay")) {
+    // handled via data-action already present on overlay
+  }
+});
+
+function focusSyncInput() {
+  const el = document.getElementById("sync-url-input");
+  if (!el) return;
+  el.addEventListener("input", (e) => saveSyncUrl(e.target.value));
+}
+
+async function doPush() {
+  const urlEl = document.getElementById("sync-url-input");
+  const url = urlEl ? urlEl.value.trim() : state.syncUrl;
+  saveSyncUrl(url);
+  if (!url) { state._syncStatus = { type: "err", text: "Pega primero la URL de la Web App." }; render(); focusSyncInput(); return; }
+  state._syncStatus = { type: "", text: "Subiendo..." };
+  render(); focusSyncInput();
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ clients: state.clients }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      state._syncStatus = { type: "ok", text: `Subido correctamente (${data.clientes} clientes).` };
+    } else {
+      state._syncStatus = { type: "err", text: "Error: " + (data.error || "desconocido") };
+    }
+  } catch (err) {
+    state._syncStatus = { type: "err", text: "No se pudo conectar. Revisa la URL y que la app esté implementada como 'Cualquier usuario'." };
+  }
+  render(); focusSyncInput();
+}
+
+async function doPull() {
+  const urlEl = document.getElementById("sync-url-input");
+  const url = urlEl ? urlEl.value.trim() : state.syncUrl;
+  saveSyncUrl(url);
+  if (!url) { state._syncStatus = { type: "err", text: "Pega primero la URL de la Web App." }; render(); focusSyncInput(); return; }
+  state._syncStatus = { type: "", text: "Descargando..." };
+  render(); focusSyncInput();
+  try {
+    const res = await fetch(url, { method: "GET" });
+    const data = await res.json();
+    if (data.clients) {
+      state.clients = data.clients;
+      save();
+      state._syncStatus = { type: "ok", text: `Descargados ${data.clients.length} clientes.` };
+    } else {
+      state._syncStatus = { type: "err", text: "Error: " + (data.error || "no se recibieron datos") };
+    }
+  } catch (err) {
+    state._syncStatus = { type: "err", text: "No se pudo conectar. Revisa la URL." };
+  }
+  render(); focusSyncInput();
+}
+
+/* ---------------- Init ---------------- */
+loadSyncUrl();
+load();
+render();
+
+/* ---------------- Service worker + install prompt ---------------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner();
+});
+function showInstallBanner() {
+  if (document.getElementById("install-banner")) return;
+  const banner = document.createElement("div");
+  banner.id = "install-banner";
+  banner.className = "install-banner";
+  banner.innerHTML = `<span>Instala esta app en tu móvil</span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <button class="install-btn">Instalar</button>
+      <button class="dismiss-btn">✕</button>
+    </span>`;
+  document.getElementById("app").appendChild(banner);
+  banner.querySelector(".install-btn").addEventListener("click", async () => {
+    banner.remove();
+    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+  });
+  banner.querySelector(".dismiss-btn").addEventListener("click", () => banner.remove());
+}
+</script>
+</body>
+</html>
